@@ -1,9 +1,17 @@
-# Assignment-1
+# Assignment-1: Word Search
 
-menu:
-generate new word search (g):
--ask how many words they want to enter
--ask for this many words
-print out your word search (p):
-show the solution to your word search (s):
-quit the program (q):
+# Menu:
+-keep showing menu until the user has quit
+
+## Generate new word search (g):
+-ask the user how many words they want to enter
+-ask the user to enter this many words
+
+## Print out your word search (p):
+-print out generated word search
+
+## Show the solution to your word search (s):
+-print solution by replacing all random letters with X's (*'s might be better)
+
+## Quit the program (q):
+-end the program
