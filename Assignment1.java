@@ -1,60 +1,109 @@
-import java.util.*;
+/*
+Authors: Sam Clarke
+Date: 1/15/2024
+Class: CS 145
+Assignment: Assignment #1: Word Search Generator
+File: Assignment1.java
+Source: Deitel / Deitel
+Purpose: Creates and prints word searches created by words from the user
+*/
 
+import java.util.*;
 
 public class Assignment1
 {
     public static void main(String[] args)
     {
-        String[] test = new String[]{"Then", "Though", "Spin", "The"};
-        int[][] shifts = new int[][]{{1,1},{1,0},{1,-1},{0,1},{0,-1},{-1,1},{-1,0},{-1,-1}};
-        int[] order = new int[]{0,1,2,3,4,5,6,7};
-        int[] cells = new int[100];
-        Random random = new Random();
+        Scanner userInputLines = new Scanner(System.in);
+        Scanner userInputTokens = new Scanner(System.in);
+        printIntro();
+        menu(userInputLines, userInputTokens);
+    }
 
-        for (int i = 0; i < cells.length; i++)
+    public static void menu(Scanner inputLines, Scanner inputTokens)
+    {
+        boolean hasQuit = false;
+        boolean hasWordSearch = false;
+        char userResponse;
+
+        while (!hasQuit)
         {
-            cells[i] = i;
+            System.out.printf("%s%n%s%n%s%n%s%n%s%n",
+            "Please select an option:",
+            "Generate a new word search (g)",
+            "Print out your word search (p)",
+            "Show the solution to your word search (s)",
+            "Quit the program (q)");
+            userResponse = inputLines.nextLine().charAt(0);
+
+            switch(userResponse)
+            {
+                case 'g':
+                case 'G':
+                    //Generate new word search
+                    hasWordSearch = true;
+                    generate(inputTokens);
+                    break;
+                case 'p':
+                case 'P':
+                    if (checkInput(hasWordSearch))
+                    {
+                        //Print word search
+                    }
+                    break;
+                case 's':
+                case 'S':
+                    if (checkInput(hasWordSearch))
+                    {
+                        //Solve the word search
+                    }
+                    break;
+                case 'q':
+                case 'Q':
+                    //Quit the program
+                    hasQuit = true;
+                    break;
+            }
+        }
+    }
+
+    public static void generate(Scanner input)
+    {
+
+        System.out.print("\nHow many words would you like to enter into your word search? ");
+        String[] userWords = new String[input.nextInt()];
+
+        for (int i = 0; i < userWords.length; i++)
+        {
+            System.out.print("Please enter word number " + (i+1) + ": ");
+            userWords[i] = input.next();
+            System.out.println();
         }
 
-        for (int i = cells.length - 1; i > 0; i--) 
+        Arrays.sort(userWords, (a,b)->Integer.compare(b.length(), a.length()));
+
+        System.out.println(Arrays.toString(userWords));
+    }
+
+    public static boolean checkInput(boolean hasWordSearch)
+    {
+        boolean checkReturn;
+        if (hasWordSearch)
         {
-            int jc = random.nextInt(i+1);
-
-            int tempc = cells[i];
-            cells[i]= cells[jc];
-            cells[jc] = tempc;
+            checkReturn = true;
         }
-
-        System.out.println(Arrays.toString(cells));
-        int cellnum;
-        int cellrow;
-        int cellcol;
-        int sideLength = (int) Math.sqrt(cells.length);
-
-        for (int i = 0; i < cells.length; i++)
+        else
         {
-            cellnum = cells[i];
-            cellrow = cellnum/sideLength;
-            cellcol = cellnum%sideLength;
-            System.out.println("(" + cellrow + "," + cellcol + ")");
+            checkReturn = false;
+            System.out.println("\nInvalid input. Plase generate a word search first.\n");
         }
+        return checkReturn;
+    }
 
-        for (int i = order.length - 1; i > 0; i--) 
-        {
-            int j = random.nextInt(i+1);
-
-            int temp = order[i];
-            order[i]= order[j];
-            order[j] = temp;
-        }
-        
-
-        for (int i = 0; i < order.length; i++)
-        {
-            System.out.println(shifts[order[i]][0] + ", " + shifts[order[i]][1]);
-        }
-
-        Arrays.sort(test, (a,b)->Integer.compare(b.length(), a.length()));
-        System.out.println(Arrays.toString(test));
+    public static void printIntro()
+    {
+        System.out.printf("%s%n%s%n",
+        "Welcome to my word search generator!",
+        "This program will allow you to generate your own word search puzzle");
     }
 }
