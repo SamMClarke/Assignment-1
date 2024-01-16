@@ -12,6 +12,9 @@ import java.util.*;
 
 public class Assignment1
 {
+    private static final int[][] shifts = {{1,1},{1,0},{1,-1},{0,1},{0,-1},{-1,1},{-1,0},{-1,-1}};
+    private static final int[] shiftsIndex = {0,1,2,3,4,5,6,7};
+
     public static void main(String[] args)
     {
         Scanner userInputLines = new Scanner(System.in);
@@ -25,6 +28,7 @@ public class Assignment1
         boolean hasQuit = false;
         boolean hasWordSearch = false;
         char userResponse;
+        Random random = new Random();
 
         while (!hasQuit)
         {
@@ -42,7 +46,7 @@ public class Assignment1
                 case 'G':
                     //Generate new word search
                     hasWordSearch = true;
-                    generate(inputTokens);
+                    generate(inputTokens, random);
                     break;
                 case 'p':
                 case 'P':
@@ -67,9 +71,9 @@ public class Assignment1
         }
     }
 
-    public static void generate(Scanner input)
+    //MAKE 3 LETTER WORDS MINIMUM
+    public static String[] gatherUserWords(Scanner input)
     {
-
         System.out.print("\nHow many words would you like to enter into your word search? ");
         String[] userWords = new String[input.nextInt()];
 
@@ -81,8 +85,103 @@ public class Assignment1
         }
 
         Arrays.sort(userWords, (a,b)->Integer.compare(b.length(), a.length()));
+        return userWords;
+    }
 
-        System.out.println(Arrays.toString(userWords));
+    public static void generate(Scanner inputTokens, Random randomObject)
+    {
+        String[] userWords = gatherUserWords(inputTokens);
+        int wordSearchSize = userWords.length;
+        char[][] wordSearch = new char[wordSearchSize][wordSearchSize];
+        int[] cells = new int[wordSearchSize*wordSearchSize];
+        int randomRow;
+        int randomColumn;
+        String currentWord;
+        int currentWordLength;
+        int currentShiftX;
+        int currentShiftY;
+        boolean hasEmpty = false;
+        boolean canFit = true;
+        int tries = 100;
+
+        emptyArray(wordSearch);
+
+        for (int i = 0; i < cells.length; i++)
+        {
+            cells[i] = i;
+        }
+
+        shuffleArray(cells, randomObject);
+
+        for (int i = 0; i < wordSearchSize; i++)
+        {
+            currentWord = userWords[i];
+            currentWordLength = currentWord.length();
+            for (int j = 0; j < Math.min(tries, cells.length); i++)
+            {
+                randomRow = cells[j] / wordSearchSize;
+                randomColumn = cells[j] % wordSearchSize;
+                shuffleArray(shiftsIndex, randomObject);
+
+                if (wordSearch[randomRow][randomColumn] == '*' || 
+                wordSearch[randomRow][randomColumn] == currentWord.charAt(0))
+                {
+                    if (wordSearch[randomRow][randomColumn] == '*') {hasEmpty = true;}
+                    //wordSearch[randomRow][randomColumn] = currentWord.charAt(0);
+
+                    for (int k = 0; k < shiftsIndex.length; k++)
+                    {
+                        currentShiftX = shifts[shiftsIndex[k]][0];
+                        currentShiftY = shifts[shiftsIndex[k]][1];
+                        
+                        if (wordSearch[randomRow+currentShiftX][randomColumn+currentShiftY] == '*' || 
+                        wordSearch[randomRow+currentShiftX][randomColumn+currentShiftY] == currentWord.charAt(1))
+                        {
+                            if (wordSearch[randomRow+currentShiftX][randomColumn+currentShiftY] == '*') {hasEmpty = true;}
+
+                            for (int z = 2; z < currentWordLength; z++)
+                            {
+                                while (canFit)
+                                {
+                                    if (wordSearch[randomRow+(currentShiftX*z)][randomColumn+(currentShiftY*z)] == '*' || 
+                                    wordSearch[randomRow+(currentShiftX*z)][randomColumn+(currentShiftY*z)] == currentWord.charAt(z))
+                                    {
+                                        if (wordSearch[randomRow+(currentShiftX*z)][randomColumn+(currentShiftY*z)] == '*') {hasEmpty = true;}
+                                    }
+                                    else
+                                    {
+                                        canFit = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void shuffleArray(int[] array, Random randomObject)
+    {
+        for (int i = array.length - 1; i > 0; i--) 
+        {
+            int jc = randomObject.nextInt(i+1);
+
+            int temp = array[i];
+            array[i]= array[jc];
+            array[jc] = temp;
+        }
+    }
+
+    public static void emptyArray(char[][] array)
+    {
+        for (int i = 0; i < array.length; i++)
+        {
+            for (int j = 0; j < array.length; j++)
+            {
+                array[i][j] = '*';
+            }
+        }
     }
 
     public static boolean checkInput(boolean hasWordSearch)
