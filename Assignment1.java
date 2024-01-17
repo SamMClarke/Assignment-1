@@ -55,7 +55,14 @@ public class Assignment1
                 case 'P':
                     if (checkInput(hasWordSearch))
                     {
-                        System.out.println(Arrays.deepToString(currentWordSearch));
+                        for (int i = 0; i < currentWordSearch.length; i++)
+                        {
+                            for (int j = 0; j < currentWordSearch.length; j++)
+                            {
+                                System.out.print(currentWordSearch[i][j] + " ");
+                            }
+                            System.out.println();
+                        }
                         //Print word search
                     }
                     break;
@@ -71,21 +78,33 @@ public class Assignment1
                     //Quit the program
                     hasQuit = true;
                     break;
+                default:
+                    break;
             }
         }
     }
 
-    //MAKE 3 LETTER WORDS MINIMUM
     public static String[] gatherUserWords(Scanner input)
     {
         System.out.print("\nHow many words would you like to enter into your word search? ");
         String[] userWords = new String[input.nextInt()];
+        String userResponse;
+        System.out.println("Words must be a minimum of three letters long\n");
 
         for (int i = 0; i < userWords.length; i++)
         {
             System.out.print("Please enter word number " + (i+1) + ": ");
-            userWords[i] = input.next();
-            System.out.println();
+            userResponse = input.next().toUpperCase();
+            if (userResponse.length() < 3)
+            {
+                System.out.println("Word is too short! Remember words must be a minimum of three letters long");
+                i--;
+            }
+            else
+            {
+                userWords[i] = userResponse;
+                System.out.println();
+            }
         }
 
         Arrays.sort(userWords, (a,b)->Integer.compare(b.length(), a.length()));
@@ -95,7 +114,12 @@ public class Assignment1
     public static char[][] generate(Scanner inputTokens, Random randomObject)
     {
         String[] userWords = gatherUserWords(inputTokens);
-        int wordSearchSize = userWords[0].length() + 1;
+        int totalCharacters = 0;
+        for (int i = 0; i < userWords.length; i++)
+        {
+            totalCharacters += userWords[i].length();
+        }
+        int wordSearchSize = (int) Math.max(Math.sqrt(totalCharacters*2), userWords[0].length());
         char[][] wordSearch = new char[wordSearchSize][wordSearchSize];
         int[] cells = new int[wordSearchSize*wordSearchSize];
         int randomRow;
@@ -106,7 +130,7 @@ public class Assignment1
         int columnShift;
         boolean hasEmpty = false;
         boolean canFit = true;
-        int tries = 100;
+        boolean hasPlaced = false;
 
         emptyArray(wordSearch);
 
@@ -120,7 +144,9 @@ public class Assignment1
             shuffleArray(cells, randomObject);
             currentWord = userWords[i];
             currentWordLength = currentWord.length();
-            for (int j = 0; j < Math.min(tries, cells.length); j++)
+            hasPlaced = false;
+            hasEmpty = false;
+            for (int j = 0; j < cells.length; j++)
             {
                 randomRow = cells[j] / wordSearchSize;
                 randomColumn = cells[j] % wordSearchSize;
@@ -166,6 +192,7 @@ public class Assignment1
 
                         if (canFit && hasEmpty)
                         {
+                            hasPlaced = true;
                             for (int n = 0; n < currentWordLength; n++)
                             {
                                 wordSearch[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] = currentWord.charAt(n);
@@ -174,10 +201,14 @@ public class Assignment1
                         }
                     }
                 }
-                if (canFit && hasEmpty)
+                if (hasPlaced)
                 {
-                    break;
+                   break;
                 }
+            }
+            if (!hasPlaced)
+            {
+                System.out.println("Could not place the word " + currentWord + " into the word search");
             }
         }
         System.out.println("Successfully generated word search!\n");
