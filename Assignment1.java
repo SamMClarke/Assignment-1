@@ -10,12 +10,21 @@ Purpose: Creates and prints word searches created by words from the user
 
 import java.util.*;
 
-import javax.management.InstanceNotFoundException;
-
 public class Assignment1
 {
     private static final int[][] shifts = {{1,1},{1,0},{1,-1},{0,1},{0,-1},{-1,1},{-1,0},{-1,-1}};
     private static final int[] shiftsIndex = {0,1,2,3,4,5,6,7};
+    private static final String[] colorText = {
+    "\u001B[38;5;1m",   //Red
+    "\u001B[38;5;2m",   //Green
+    "\u001B[38;5;3m",   //Yellow
+    "\u001B[38;5;4m",   //Blue
+    "\u001B[38;5;5m",   //Magenta
+    "\u001B[38;5;198m", //Pink
+    "\u001B[38;5;202m", //Orange
+    "\u001B[38;5;94m",  //Brown
+    "\u001B[38;5;196m", //Bright Red
+    "\u001B[38;5;51m"}; //Bright Blue
 
     public static void main(String[] args)
     {
@@ -30,7 +39,8 @@ public class Assignment1
         boolean hasQuit = false;
         boolean hasWordSearch = false;
         char userResponse;
-        char[][] currentWordSearch = new char[0][0];
+        WordSearch currentWordSearch = new WordSearch();
+        String colorReset = "\u001B[0m";
         Random random = new Random();
 
         while (!hasQuit)
@@ -55,15 +65,15 @@ public class Assignment1
                 case 'P':
                     if (checkInput(hasWordSearch))
                     {
-                        for (int i = 0; i < currentWordSearch.length; i++)
+                        for (int i = 0; i < currentWordSearch.getWordSearch().length; i++)
                         {
-                            for (int j = 0; j < currentWordSearch.length; j++)
+                            for (int j = 0; j < currentWordSearch.getWordSearch().length; j++)
                             {
-                                System.out.print(currentWordSearch[i][j] + " ");
+                                System.out.print(currentWordSearch.getWordSearchColor()[i][j] + currentWordSearch.getWordSearch()[i][j] + colorReset + " ");
+                                
                             }
                             System.out.println();
                         }
-                        //Print word search
                     }
                     break;
                 case 's':
@@ -102,7 +112,7 @@ public class Assignment1
             }
             else
             {
-                userWords[i] = userResponse;
+                userWords[i] = (userResponse);
                 System.out.println();
             }
         }
@@ -111,7 +121,7 @@ public class Assignment1
         return userWords;
     }
 
-    public static char[][] generate(Scanner inputTokens, Random randomObject)
+    public static WordSearch generate(Scanner inputTokens, Random randomObject)
     {
         String[] userWords = gatherUserWords(inputTokens);
         int totalCharacters = 0;
@@ -121,6 +131,7 @@ public class Assignment1
         }
         int wordSearchSize = (int) Math.max(Math.sqrt(totalCharacters*2), userWords[0].length());
         char[][] wordSearch = new char[wordSearchSize][wordSearchSize];
+        String[][] wordSearchColor = new String[wordSearchSize][wordSearchSize];
         int[] cells = new int[wordSearchSize*wordSearchSize];
         int randomRow;
         int randomColumn;
@@ -128,9 +139,20 @@ public class Assignment1
         int currentWordLength;
         int rowShift;
         int columnShift;
+        int maxTries = 100;
         boolean hasEmpty = false;
+        boolean hasIntersected = false;
         boolean canFit = true;
         boolean hasPlaced = false;
+        int intersectTries = (int) (Math.min(cells.length, maxTries)/2);
+
+        for (int i = 0; i < wordSearchColor.length; i++)
+        {
+            for (int j = 0; j < wordSearchColor.length; j++)
+            {
+                wordSearchColor[i][j] = "\u001B[37m";
+            }
+        }
 
         emptyArray(wordSearch);
 
@@ -139,18 +161,19 @@ public class Assignment1
             cells[i] = i;
         }
 
-        for (int i = 0; i < userWords.length; i++)
+        for (int wordIndex = 0; wordIndex < userWords.length; wordIndex++)
         {
             shuffleArray(cells, randomObject);
-            currentWord = userWords[i];
+            currentWord = userWords[wordIndex];
             currentWordLength = currentWord.length();
             hasPlaced = false;
-            hasEmpty = false;
-            for (int j = 0; j < cells.length; j++)
+            for (int tries = 0; tries < Math.min(cells.length, maxTries); tries++)
             {
-                randomRow = cells[j] / wordSearchSize;
-                randomColumn = cells[j] % wordSearchSize;
+                randomRow = cells[tries] / wordSearchSize;
+                randomColumn = cells[tries] % wordSearchSize;
                 shuffleArray(shiftsIndex, randomObject);
+                hasEmpty = false;
+                hasIntersected = false;
 
                 if (wordSearch[randomRow][randomColumn] == '*' || 
                 wordSearch[randomRow][randomColumn] == currentWord.charAt(0))
@@ -158,6 +181,10 @@ public class Assignment1
                     if (wordSearch[randomRow][randomColumn] == '*') 
                     {
                         hasEmpty = true;
+                    }
+                    else
+                    {
+                        hasIntersected = true;
                     }
 
                     for (int k = 0; k < shiftsIndex.length; k++)
@@ -178,9 +205,13 @@ public class Assignment1
                             if (wordSearch[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] == '*' ||
                             wordSearch[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] == currentWord.charAt(n))
                             {
-                                if (wordSearch[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] == '*' && !hasEmpty) 
+                                if (wordSearch[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] == '*') 
                                 {
                                     hasEmpty = true;
+                                }
+                                else
+                                {
+                                    hasIntersected = true;
                                 }
                             }
                             else
@@ -192,12 +223,16 @@ public class Assignment1
 
                         if (canFit && hasEmpty)
                         {
-                            hasPlaced = true;
-                            for (int n = 0; n < currentWordLength; n++)
+                            if ((tries < intersectTries && hasIntersected) || (tries >= intersectTries) || (wordIndex == 0))
                             {
-                                wordSearch[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] = currentWord.charAt(n);
+                                hasPlaced = true;
+                                for (int n = 0; n < currentWordLength; n++)
+                                {
+                                    wordSearch[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] = currentWord.charAt(n);
+                                    wordSearchColor[randomRow+(rowShift*n)][randomColumn+(columnShift*n)] = colorText[wordIndex % colorText.length];
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
@@ -212,7 +247,9 @@ public class Assignment1
             }
         }
         System.out.println("Successfully generated word search!\n");
-        return wordSearch;
+
+        WordSearch myWordSearch = new WordSearch(wordSearch, wordSearchColor);
+        return myWordSearch;
     }
 
     public static void shuffleArray(int[] array, Random randomObject)
