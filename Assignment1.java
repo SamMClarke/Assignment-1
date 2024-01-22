@@ -207,34 +207,52 @@ public class Assignment1
         String[] userWords = new String[0];
         try
         {
-            System.out.println("\nText file format needs to have ONE word per line with NO empty lines.");
-            System.out.print("Input file name: ");
-            String inputFileName = input.nextLine();
-            File inputFile = new File(inputFileName);
+            String inputFileName;
+            File inputFile;
             int numLines = 0;
+            boolean validFormat = false;
 
-            while (!inputFile.exists())
+            while (!validFormat)
             {
-                System.out.print("File not found. Try again: ");
+                validFormat = true;
+                System.out.println("\nText file format needs to have ONE word (3 letters or more) per line.");
+                System.out.print("Input file name: ");
                 inputFileName = input.nextLine();
                 inputFile = new File(inputFileName);
-            }
+                numLines = 0;
 
-            Scanner inputFileCount = new Scanner(inputFile);
-            Scanner inputFileScanner = new Scanner(inputFile);
+                while (!inputFile.exists())
+                {
+                    System.out.print("File not found. Try again: ");
+                    inputFileName = input.nextLine();
+                    inputFile = new File(inputFileName);
+                }
 
-            while (inputFileCount.hasNextLine())
-            {
-                numLines++;
-                inputFileCount.nextLine();
-            }
+                Scanner inputFileCount = new Scanner(inputFile);
+                Scanner inputFileScanner = new Scanner(inputFile);
 
-            userWords = new String[numLines];
-            for (int i = 0; i < numLines; i++)
-            {
-                userWords[i] = inputFileScanner.nextLine().toUpperCase();
+                while (inputFileCount.hasNextLine())
+                {
+                    numLines++;
+                    inputFileCount.nextLine();
+                }
+
+                if (validFormat)
+                {
+                    userWords = new String[numLines];
+                    for (int i = 0; i < numLines; i++)
+                    {
+                        userWords[i] = inputFileScanner.nextLine().toUpperCase();
+                        if (userWords[i].length() < 3)
+                        {
+                            validFormat = false;
+                            System.out.print("\nFile does not fit the intended format. Please edit the file and try again.");
+                            break;
+                        }
+                    }
+                    System.out.println();
+                }
             }
-            System.out.println();
         }
         catch (FileNotFoundException e)
         {
