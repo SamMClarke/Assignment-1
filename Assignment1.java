@@ -8,6 +8,8 @@ Source: Deitel / Deitel
 Purpose: Creates and prints word searches created by words from the user
 */
 
+import java.io.*;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Assignment1
@@ -30,34 +32,28 @@ public class Assignment1
     {
         Scanner userInputLines = new Scanner(System.in);
         Scanner userInputTokens = new Scanner(System.in);
-        printIntro();
         menu(userInputLines, userInputTokens);
     }
 
     public static void menu(Scanner inputLines, Scanner inputTokens)
     {
+        printIntro();
+
         boolean hasQuit = false;
         boolean hasWordSearch = false;
-        char userResponse;
-        WordSearch currentWordSearch = new WordSearch();
-        String colorReset = "\u001B[0m";
         Random random = new Random();
-
+        WordSearch currentWordSearch = new WordSearch();
+        char userResponse;
+        String colorReset = "\u001B[0m";
+        
         while (!hasQuit)
         {
-            System.out.printf("%s%n%s%n%s%n%s%n%s%n",
-            "Please select an option:",
-            "Generate a new word search (g)",
-            "Print out your word search (p)",
-            "Show the solution to your word search (s)",
-            "Quit the program (q)");
-            userResponse = inputLines.nextLine().charAt(0);
+            userResponse = printMenu(inputLines);
 
             switch(userResponse)
             {
                 case 'g':
                 case 'G':
-                    //Generate new word search
                     hasWordSearch = true;
                     currentWordSearch = generate(inputTokens, random);
                     break;
@@ -65,22 +61,21 @@ public class Assignment1
                 case 'P':
                     if (checkInput(hasWordSearch))
                     {
-                        for (int i = 0; i < currentWordSearch.getWordSearch().length; i++)
-                        {
-                            for (int j = 0; j < currentWordSearch.getWordSearch().length; j++)
-                            {
-                                System.out.print(currentWordSearch.getWordSearchColor()[i][j] + currentWordSearch.getWordSearch()[i][j] + colorReset + " ");
-                                
-                            }
-                            System.out.println();
-                        }
+                        printWordSearch(currentWordSearch, random, System.out);
                     }
                     break;
                 case 's':
                 case 'S':
                     if (checkInput(hasWordSearch))
                     {
-                        //Solve the word search
+                        printSolution(currentWordSearch, colorReset, true, System.out);
+                    }
+                    break;
+                case 'f':
+                case 'F':
+                    if (checkInput(hasWordSearch))
+                    {
+                        saveWordSearch(currentWordSearch, inputLines, random, colorReset);
                     }
                     break;
                 case 'q':
@@ -94,12 +89,166 @@ public class Assignment1
         }
     }
 
+    public static void saveWordSearch(WordSearch WordSearch, Scanner input, Random random, String colorReset)
+    {
+        try
+        {
+            System.out.print("\nPlease enter the name of the file you would like to save your word search to: ");
+            String outputFileName = input.nextLine();
+            PrintStream outputFile = new PrintStream(new File(outputFileName));
+
+            printWordSearch(WordSearch, random, outputFile);
+            outputFile.println();
+            printSolution(WordSearch, colorReset, false, outputFile);
+
+            System.out.println("\nSuccessfully saved the word search to " + outputFileName + "!\n");
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println(e);
+        }
+    }
+
+    public static void printLine(int wordSearchLength, PrintStream printType)
+    {
+        printType.println("=".repeat(wordSearchLength*2+2));
+    }
+
+    public static void printWordSearch(WordSearch WordSearch, Random random, PrintStream printType)
+    {
+        char[][] wordSearchPrint = WordSearch.getWordSearch();
+        printLine(wordSearchPrint.length, printType);
+
+        for (int i = 0; i < wordSearchPrint.length; i++)
+        {
+            printType.print("| ");
+            for (int j = 0; j < wordSearchPrint.length; j++)
+            {
+                if (wordSearchPrint[i][j] == '*')
+                {
+                    printType.print(((char)(random.nextInt(26)+'a') + " ").toUpperCase());
+                }
+                else
+                {
+                    printType.print(wordSearchPrint[i][j] + " ");
+                }
+            }
+            printType.println("|");
+        }
+        printLine(wordSearchPrint.length, printType);
+    }
+
+    public static void printSolution(WordSearch WordSearch, String colorReset, boolean printColor, PrintStream printType)
+    {
+        printLine(WordSearch.getWordSearch().length, printType);
+        for (int i = 0; i < WordSearch.getWordSearch().length; i++)
+        {
+            printType.print("| ");
+            for (int j = 0; j < WordSearch.getWordSearch().length; j++)
+            {
+                if (printColor)
+                {
+                    printType.print(WordSearch.getWordSearchColor()[i][j] + WordSearch.getWordSearch()[i][j] + colorReset + " ");
+                }
+                else
+                {
+                    printType.print(WordSearch.getWordSearch()[i][j] + " ");
+                }
+            }
+            printType.println("|");
+        }
+        printLine(WordSearch.getWordSearch().length, printType);
+    }
+
+    public static char printMenu(Scanner input)
+    {
+        System.out.printf("%s%n%s%n%s%n%s%n%s%n%s%n",
+        "Please select an option:",
+        "Generate a new word search (g)",
+        "Print out your word search (p)",
+        "Show the solution to your word search (s)",
+        "Save current word search and its solution to a file (f)",
+        "Quit the program (q)");
+        return input.nextLine().charAt(0);
+    }
+
     public static String[] gatherUserWords(Scanner input)
+    {
+        boolean validAnswer = false;
+        char inputType;
+        String[] userWordsReturn = new String[0];
+        while(!validAnswer)
+        {
+            System.out.print("\nHow would you like to enter your words? Press f for file input. Press m for manual input: ");
+            inputType = input.nextLine().charAt(0);
+            switch (inputType)
+            {
+                case 'f':
+                case 'F':
+                    validAnswer = true;
+                    userWordsReturn = fileInput(input);
+                    break;
+                case 'm':
+                case 'M':
+                    validAnswer = true;
+                    userWordsReturn = manualInput(input);
+                    break;
+                default:
+                    System.out.println("Invalid input. Please try again.");
+                    break;
+            }
+        }
+        Arrays.sort(userWordsReturn, (a,b)->Integer.compare(b.length(), a.length()));
+        return userWordsReturn;
+    }
+
+    public static String[] fileInput(Scanner input)
+    {
+        String[] userWords = new String[0];
+        try
+        {
+            System.out.println("\nText file format needs to have ONE word per line with NO empty lines.");
+            System.out.print("Input file name: ");
+            String inputFileName = input.nextLine();
+            File inputFile = new File(inputFileName);
+            int numLines = 0;
+
+            while (!inputFile.exists())
+            {
+                System.out.print("File not found. Try again: ");
+                inputFileName = input.nextLine();
+                inputFile = new File(inputFileName);
+            }
+
+            Scanner inputFileCount = new Scanner(inputFile);
+            Scanner inputFileScanner = new Scanner(inputFile);
+
+            while (inputFileCount.hasNextLine())
+            {
+                numLines++;
+                inputFileCount.nextLine();
+            }
+
+            userWords = new String[numLines];
+            for (int i = 0; i < numLines; i++)
+            {
+                userWords[i] = inputFileScanner.nextLine().toUpperCase();
+            }
+            System.out.println();
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println(e);
+        }
+        return userWords;
+    }
+
+    public static String[] manualInput(Scanner input)
     {
         System.out.print("\nHow many words would you like to enter into your word search? ");
         String[] userWords = new String[input.nextInt()];
         String userResponse;
-        System.out.println("Words must be a minimum of three letters long\n");
+        System.out.println("Words must be a minimum of three letters long.\n");
 
         for (int i = 0; i < userWords.length; i++)
         {
@@ -107,7 +256,7 @@ public class Assignment1
             userResponse = input.next().toUpperCase();
             if (userResponse.length() < 3)
             {
-                System.out.println("Word is too short! Remember words must be a minimum of three letters long");
+                System.out.println("Word is too short! Remember words must be a minimum of three letters long.");
                 i--;
             }
             else
@@ -116,8 +265,6 @@ public class Assignment1
                 System.out.println();
             }
         }
-
-        Arrays.sort(userWords, (a,b)->Integer.compare(b.length(), a.length()));
         return userWords;
     }
 
@@ -294,6 +441,6 @@ public class Assignment1
     {
         System.out.printf("%s%n%s%n",
         "Welcome to my word search generator!",
-        "This program will allow you to generate your own word search puzzle");
+        "This program will allow you to generate your own word search puzzle.");
     }
 }
