@@ -1,7 +1,8 @@
 public class WordSearch 
 {
-    private char[][] wordSearch = new char[0][0];
-    private String[][] wordSearchColor = new String[0][0];
+    //Each word search has two arrays:
+    private char[][] wordSearch = new char[0][0]; //One that stores the actual letters of the word search
+    private String[][] wordSearchColor = new String[0][0]; //One that stores the ANSI color codes of the word search
 
     public WordSearch()
     {
